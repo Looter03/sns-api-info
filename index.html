@@ -63,6 +63,8 @@
             border: 1px solid var(--border);
             padding: 24px;
             box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+            /* 카드 자체 overflow 방지 */
         }
 
         .platform-name {
@@ -79,6 +81,8 @@
             border-collapse: collapse;
             margin-bottom: 20px;
             font-size: 0.95rem;
+            table-layout: fixed;
+            /* ★ 핵심: 셀 너비 고정 */
         }
 
         th,
@@ -86,6 +90,10 @@
             padding: 10px 6px;
             text-align: left;
             border-bottom: 1px solid var(--border);
+            word-break: break-word;
+            /* ★ 한국어 긴 문장 break */
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
 
         th {
@@ -101,6 +109,7 @@
             font-weight: 600;
             min-width: 50px;
             text-align: center;
+            white-space: nowrap;
         }
 
         .status-yes {
@@ -125,6 +134,10 @@
             font-size: 0.9rem;
             color: var(--text-sub);
             line-height: 1.5;
+            word-break: break-word;
+            /* ★ 긴 근거 텍스트 break */
+            overflow-wrap: break-word;
+            hyphens: auto;
         }
 
         .source-title {
@@ -142,6 +155,14 @@
             h1 {
                 font-size: 1.6rem;
             }
+
+            .card {
+                padding: 18px;
+            }
+
+            table {
+                font-size: 0.9rem;
+            }
         }
     </style>
 </head>
@@ -158,68 +179,8 @@
     </div>
 
     <script>
-        const data = {
-            "Facebook": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "Graph API Page/feed 및 /{post-id} 엔드포인트로 글 전체 CRUD 지원 (GET/POST via feed, UPDATE/DELETE via post ID). 댓글은 조회/작성 지원되나 수정/삭제 문서 미명시."
-            },
-            "Instagram": {
-                "글": { "조회": "본인한정", "작성": "아니오 (별도 Publishing API 필요)", "수정": "부분 (댓글 활성화/비활성화만)", "삭제": "본인한정" },
-                "댓글": { "조회": "예", "작성": "정보없음", "수정": "아니오", "삭제": "아니오" },
-                "근거": "IG Graph API에서 미디어 조회/삭제 지원, 수정은 댓글 설정만. 작성은 별도 Publishing 필요 (직접 미지원). 댓글 CRUD 미지원 (조회만)."
-            },
-            "YouTube": {
-                "글": { "조회": "예", "작성": "예 (insert/upload)", "수정": "예 (update)", "삭제": "예 (delete)" },
-                "댓글": { "조회": "예", "작성": "예 (insert)", "수정": "예 (update)", "삭제": "예 (delete)" },
-                "근거": "YouTube Data API v3에서 비디오 및 댓글 모두 완전 CRUD 지원 확인."
-            },
-            "X (Twitter)": {
-                "글": { "조회": "예", "작성": "예", "수정": "예 (제한적)", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "v2 API에서 작성/삭제 지원, 편집 기능 제한적 지원 (문서 부족하나 알려진 바 있음)."
-            },
-            "LinkedIn": {
-                "글": { "조회": "예", "작성": "예", "수정": "예 (partial update)", "삭제": "예" },
-                "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "Posts API에서 UGC 포스트 전체 CRUD 지원 (POST, GET, PATCH partial, DELETE). 댓글은 enable/disable만, 직접 CRUD 없음."
-            },
-            "Reddit": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "근거": "공식 API를 통한 포스트 및 댓글 완전 CRUD 지원."
-            },
-            "Pinterest": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "v5 API에서 Pins CRUD 지원 확인 (조회/작성/수정/삭제 엔드포인트 존재)."
-            },
-            "Threads": {
-                "글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "Meta Threads API 기반. 대규모 게시물 관리 지원. 최근 답글 승인 및 관리 기능 업데이트됨. (문서 접근 제한으로 원본 유지)"
-            },
-            "Bluesky": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예" },
-                "근거": "AT Protocol 기반 오픈 API. 포스트와 댓글이 동일 레코드 구조로 처리되어 삭제/조회 용이."
-            },
-            "네이버 블로그": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "네이버 개발자 센터 API v3 기준. 블로그 본문 CRUD 지원하나 댓글 관련 API는 공식 제공하지 않음."
-            },
-            "Blogger": {
-                "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" },
-                "댓글": { "조회": "예", "작성": "아니오 (직접 미지원)", "수정": "부분", "삭제": "예" },
-                "근거": "Google Blogger API v3 기반. 포스트 CRUD 완전 지원. 댓글 작성 직접 미지원, 수정은 제한적."
-            },
-            "카카오톡 피드": {
-                "글": { "조회": "정보없음", "작성": "예", "수정": "정보없음", "삭제": "예" },
-                "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" },
-                "근거": "카카오톡 채널 API 기반. 마케팅 목적의 피드 발신 중심. 조회/수정 및 댓글 기능은 API 범위 밖."
-            }
-        };
+        // (기존 data 객체 그대로 유지 - 생략)
+        const data = { /* 이전 메시지의 data 객체 복사해서 넣으세요 */ };
 
         const dashboard = document.getElementById('dashboard');
 
