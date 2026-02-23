@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SNS API 기능 현황 조사 결과 (2026)</title>
+    <style>
+        :root {
+            --bg-color: #f8f9fa;
+            --card-bg: #ffffff;
+            --primary: #2563eb;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border: #e2e8f0;
+            --yes: #dcfce7;
+            --yes-text: #166534;
+            --no: #fee2e2;
+            --no-text: #991b1b;
+            --info: #f1f5f9;
+            --info-text: #475569;
+        }
+
+        body {
+            font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.5;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            color: var(--text-main);
+            margin-bottom: 10px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        .platform-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+            border-bottom: 2px solid var(--bg-color);
+            padding-bottom: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        th {
+            text-align: left;
+            color: var(--text-sub);
+            font-weight: 500;
+            padding: 8px 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 8px 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .status-yes {
+            background-color: var(--yes);
+            color: var(--yes-text);
+        }
+
+        .status-no {
+            background-color: var(--no);
+            color: var(--no-text);
+        }
+
+        .status-info {
+            background-color: var(--info);
+            color: var(--info-text);
+        }
+
+        .source-box {
+            background-color: var(--bg-color);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .source-title {
+            font-weight: 700;
+            display: block;
+            margin-bottom: 5px;
+            color: var(--text-main);
+        }
+
+        @media (max-width: 480px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <h1>SNS 플랫폼 API 기능 조사 결과</h1>
+            <p style="color: var(--text-sub);">2026년 2월 기준 공식 문서 및 사례 분석 데이터</p>
+        </header>
+
+        <div class="grid" id="dashboard">
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            "Facebook": { "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" }, "근거": "Meta Graph API 기반. 페이지 소유자 대상 CRUD 지원. 웹 외부용 플러그인은 중단되었으나 내부 API는 유지." },
+            "Instagram": { "글": { "조회": "본인한정", "작성": "본인한정", "수정": "정보없음", "삭제": "본인한정", "발행": "본인한정" }, "댓글": { "조회": "예", "작성": "예", "수정": "아니오", "삭제": "아니오" }, "근거": "Instagram Graph API 기반. 비즈니스/크리에이터 계정 중심. 댓글 수정/삭제 API 미지원." },
+            "YouTube": { "글": { "조회": "예", "작성": "아니오", "수정": "아니오", "삭제": "아니오", "발행": "제한적" }, "댓글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" }, "근거": "YouTube Data API v3 기반. 댓글 CRUD 완전 지원. 동영상 업로드(글 작성)는 별도 프로토콜 필요." },
+            "X (Twitter)": { "글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" }, "근거": "X API v2 유료 정책 적용. 트윗/답글 작성 API 통합 운영. 수정 관련 명확한 엔드포인트 미확인." },
+            "LinkedIn": { "글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예", "발행": "예" }, "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" }, "근거": "Marketing Developer Platform 기반. UGC 포스트 CRUD 지원하나 댓글 관련 API 접근 권한 제한적." },
+            "Reddit": { "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" }, "근거": "공식 API를 통한 포스트 및 댓글 완전 CRUD 지원. 2023년 유료화 이후에도 핵심 기능 유지." },
+            "Pinterest": { "글": { "조회": "정보없음", "작성": "예", "수정": "예", "삭제": "제한적", "발행": "예" }, "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" }, "근거": "API v5 기반 광고/핀 생성 중심. 자동화 스크래핑 엄격 제한. 일반 댓글 API 비공개." },
+            "Threads": { "글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "정보없음" }, "근거": "Meta Threads API 기반. 대규모 게시물 관리 지원. 최근 답글 승인 및 관리 기능 업데이트됨." },
+            "Bluesky": { "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "정보없음", "삭제": "예" }, "근거": "AT Protocol 기반 오픈 API. 포스트와 댓글이 동일 레코드 구조로 처리되어 삭제/조회 용이." },
+            "네이버 블로그": { "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예", "발행": "예" }, "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" }, "근거": "네이버 개발자 센터 API v3 기준. 블로그 본문 CRUD 지원하나 댓글 관련 API는 공식 제공하지 않음." },
+            "Blogger": { "글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예", "발행": "예" }, "댓글": { "조회": "예", "작성": "예", "수정": "예", "삭제": "예" }, "근거": "Google Blogger API v3 기반. 포스트 및 댓글 컬렉션에 대한 완전한 CRUD 기능 제공." },
+            "카카오톡 피드": { "글": { "조회": "정보없음", "작성": "예", "수정": "정보없음", "삭제": "예", "발행": "예" }, "댓글": { "조회": "정보없음", "작성": "정보없음", "수정": "정보없음", "삭제": "정보없음" }, "근거": "카카오톡 채널 API 기반. 마케팅 목적의 피드 발신 중심. 조회/수정 및 댓글 기능은 API 범위 밖." }
+        };
+
+        const dashboard = document.getElementById('dashboard');
+
+        function getBadgeClass(status) {
+            if (status === '예') return 'status-yes';
+            if (status === '아니오') return 'status-no';
+            return 'status-info';
+        }
+
+        for (const [name, info] of Object.entries(data)) {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            let html = `<div class="platform-name">${name}</div>`;
+            html += `<table>
+                    <thead><tr><th>구분</th><th>조회</th><th>작성</th><th>수정</th><th>삭제</th></tr></thead>
+                    <tbody>
+                        <tr>
+                            <td>글</td>
+                            <td><span class="status-badge ${getBadgeClass(info.글.조회)}">${info.글.조회}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.글.작성)}">${info.글.작성}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.글.수정)}">${info.글.수정}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.글.삭제)}">${info.글.삭제}</span></td>
+                        </tr>
+                        <tr>
+                            <td>댓글</td>
+                            <td><span class="status-badge ${getBadgeClass(info.댓글.조회)}">${info.댓글.조회}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.댓글.작성)}">${info.댓글.작성}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.댓글.수정)}">${info.댓글.수정}</span></td>
+                            <td><span class="status-badge ${getBadgeClass(info.댓글.삭제)}">${info.댓글.삭제}</span></td>
+                        </tr>
+                    </tbody>
+                </table>`;
+            html += `<div class="source-box"><span class="source-title">데이터 근거</span>${info.근거}</div>`;
+
+            card.innerHTML = html;
+            dashboard.appendChild(card);
+        }
+    </script>
+
+</body>
+
+</html>
