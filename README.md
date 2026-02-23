@@ -1,1 +1,0 @@
-# sns-api-info
